@@ -68,6 +68,7 @@ void free_element_list(element * elt);
 void free_element(element *elt);
 void print_element_list(NSMutableString *out, element *elt, int format, int exts, NSDictionary* current);
 void print_element_list_attr(NSMutableAttributedString *out, element *elt, int exts, NSDictionary __unsafe_unretained *attributes[], NSDictionary *current);
+void print_element_list_attr_img_url(NSMutableArray *out, element *elt, int exts, NSDictionary __unsafe_unretained *attributes[], NSDictionary *current);
 
 
 /* vim:set ts=4 sw=4: */
