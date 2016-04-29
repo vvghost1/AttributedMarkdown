@@ -193,6 +193,8 @@ static void print_attr_element(NSMutableAttributedString *out, element *elt, NSD
         case HTML:
             //[out appendFormat:@"%@", elt->contents.str];
             break;
+        case IMAGE:
+            // Parse IMAGE as LINK
         case LINK:;
             NSURL *url = [NSURL URLWithString:elt->contents.link->url];
             if (url) {
@@ -203,9 +205,6 @@ static void print_attr_element(NSMutableAttributedString *out, element *elt, NSD
                 print_attr_element_list(out, elt->contents.link->label, attributes, merge(current, attributesBroken));
                 print_attr_string(out, [NSString stringWithFormat: @" (%@)", elt->contents.link->url], current);
             }
-            break;
-        case IMAGE:
-            // NOT CURRENTLY SUPPORTED
             break;
         case EMPH: case STRONG:
             print_attr_element_list(out, elt->children, attributes, merge(current, attributes[elt->key]));
