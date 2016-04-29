@@ -143,6 +143,65 @@ NSMutableAttributedString* markdown_to_attr_string(NSString *text, int extension
     return out;
 }
 
+NSMutableArray* markdown_to_attr_string_img_url(NSString *text, int extensions, NSDictionary* attributes) {
+    NSMutableArray *out = [NSMutableArray array];
+    
+    NSMutableString *formatted_text = preformat_text(text);
+    
+    element *references = parse_references(formatted_text, extensions);
+    element *notes = parse_notes(formatted_text, extensions, references);
+    element *result = parse_markdown(formatted_text, extensions, references, notes);
+    result = process_raw_blocks(result, extensions, references, notes);
+    
+    //[out beginEditing];
+    
+    NSDictionary *_attributes[] = {
+        [LIST] =        [attributes objectForKey:[NSNumber numberWithInt:LIST]],
+        [RAW] =         [attributes objectForKey:[NSNumber numberWithInt:RAW]],
+        [SPACE]=        [attributes objectForKey:[NSNumber numberWithInt:SPACE]],
+        [LINEBREAK]=    [attributes objectForKey:[NSNumber numberWithInt:LINEBREAK]],
+        [ELLIPSIS]=     [attributes objectForKey:[NSNumber numberWithInt:ELLIPSIS]],
+        [EMDASH]=       [attributes objectForKey:[NSNumber numberWithInt:EMDASH]],
+        [ENDASH]=       [attributes objectForKey:[NSNumber numberWithInt:ENDASH]],
+        [APOSTROPHE]=   [attributes objectForKey:[NSNumber numberWithInt:APOSTROPHE]],
+        [SINGLEQUOTED]= [attributes objectForKey:[NSNumber numberWithInt:SINGLEQUOTED]],
+        [DOUBLEQUOTED]= [attributes objectForKey:[NSNumber numberWithInt:DOUBLEQUOTED]],
+        [STRING]=       [attributes objectForKey:[NSNumber numberWithInt:STRING]],
+        [LINK]=         [attributes objectForKey:[NSNumber numberWithInt:LINK]],
+        [IMAGE]=        [attributes objectForKey:[NSNumber numberWithInt:IMAGE]],
+        [CODE]=         [attributes objectForKey:[NSNumber numberWithInt:CODE]],
+        [HTML]=         [attributes objectForKey:[NSNumber numberWithInt:HTML]],
+        [EMPH]=         [attributes objectForKey:[NSNumber numberWithInt:EMPH]],
+        [STRONG]=       [attributes objectForKey:[NSNumber numberWithInt:STRONG]],
+        [PLAIN]=        [attributes objectForKey:[NSNumber numberWithInt:PLAIN]],
+        [PARA]=         [attributes objectForKey:[NSNumber numberWithInt:PARA]],
+        [LISTITEM]=     [attributes objectForKey:[NSNumber numberWithInt:LISTITEM]],
+        [BULLETLIST]=   [attributes objectForKey:[NSNumber numberWithInt:BULLETLIST]],
+        [ORDEREDLIST]=  [attributes objectForKey:[NSNumber numberWithInt:ORDEREDLIST]],
+        [H1]=           [attributes objectForKey:[NSNumber numberWithInt:H1]],
+        [H2]=           [attributes objectForKey:[NSNumber numberWithInt:H2]],
+        [H3]=           [attributes objectForKey:[NSNumber numberWithInt:H3]],
+        [H4]=           [attributes objectForKey:[NSNumber numberWithInt:H4]],
+        [H5]=           [attributes objectForKey:[NSNumber numberWithInt:H5]],
+        [H6]=           [attributes objectForKey:[NSNumber numberWithInt:H6]],
+        [BLOCKQUOTE]=   [attributes objectForKey:[NSNumber numberWithInt:BLOCKQUOTE]],
+        [VERBATIM]=     [attributes objectForKey:[NSNumber numberWithInt:VERBATIM]],
+        [HTMLBLOCK]=    [attributes objectForKey:[NSNumber numberWithInt:HTMLBLOCK]],
+        [HRULE]=        [attributes objectForKey:[NSNumber numberWithInt:HRULE]],
+        [REFERENCE]=    [attributes objectForKey:[NSNumber numberWithInt:REFERENCE]],
+        [NOTE]=         [attributes objectForKey:[NSNumber numberWithInt:NOTE]],
+    };
+    
+    
+    print_element_list_attr_img_url(out, result, extensions, _attributes, @{});
+    //[out endEditing];
+    
+    free_element_list(result);
+    free_element_list(references);
+    return out;
+}
+
+
 @implementation NSString (Sugar)
 
 - (const char *)defaultCString {
