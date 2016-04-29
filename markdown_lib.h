@@ -19,6 +19,8 @@ enum markdown_formats {
 };
 
 NSMutableAttributedString* markdown_to_attr_string(NSString *text, int extensions, NSDictionary* attributes);
+NSMutableArray* markdown_to_attr_string_img_url(NSString *text, int extensions, NSDictionary* attributes);
+
 
 NSMutableString * markdown_to_nsstring(NSString *text, int extensions, int output_format);
 const char * markdown_to_string(NSString *text, int extensions, int output_format);
