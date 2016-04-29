@@ -30,6 +30,8 @@ static int extensions;
 static void print_attr_string(NSMutableAttributedString *out, NSString *str, NSDictionary *current);
 static void print_attr_element_list(NSMutableAttributedString *out, element *list, NSDictionary *attributes[], NSDictionary *current);
 static void print_attr_element(NSMutableAttributedString *out, element *elt, NSDictionary *attributes[], NSDictionary *current);
+static void print_attr_element_list_img_url(NSMutableArray *out, element *list, NSDictionary *attributes[], NSDictionary *current);
+static void print_attr_element_img_url(NSMutableArray *out, element *elt, NSDictionary *attributes[], NSDictionary *current);
 /**********************************************************************
 
   Utility functions for printing
@@ -159,6 +161,13 @@ static void print_attr_element_list(NSMutableAttributedString *out, element *lis
     }
 }
 
+static void print_attr_element_list_img_url(NSMutableArray *out, element *list, NSDictionary *attributes[], NSDictionary *current) {
+    while (list != NULL) {
+        print_attr_element_img_url(out, list, attributes, current);
+        list = list->next;
+    }
+}
+
 
 /* add_endnote - add an endnote to global endnotes list. */
 __unused static void add_endnote(element *elt) {
@@ -193,9 +202,11 @@ static void print_attr_element(NSMutableAttributedString *out, element *elt, NSD
         case HTML:
             //[out appendFormat:@"%@", elt->contents.str];
             break;
-        case IMAGE:
+            case LINK:;
+            break;
+        case IMAGE:;
             // Parse IMAGE as LINK
-        case LINK:;
+        //case LINK:;
             NSURL *url = [NSURL URLWithString:elt->contents.link->url];
             if (url) {
                 NSDictionary *linkAttibutes = @{@"attributedMarkdownURL": url};
@@ -286,6 +297,108 @@ static void print_attr_element(NSMutableAttributedString *out, element *elt, NSD
     }
 }
 
+
+static void print_attr_element_img_url(NSMutableArray *out, element *elt, NSDictionary *attributes[], NSDictionary *current) {
+    
+    switch (elt->key) {
+        case IMAGE:;
+            // Parse IMAGE as LINK
+            [out addObject: elt->contents.link->url];
+            break;
+        case LINK:;
+//            
+//            NSURL *url = [NSURL URLWithString:elt->contents.link->url];
+//            if (url) {
+//                NSDictionary *linkAttibutes = @{@"attributedMarkdownURL": url};
+//                print_attr_element_list(out, elt->contents.link->label, attributes, merge(current, merge(attributes[elt->key], linkAttibutes)));
+//            } else {
+//                NSDictionary *attributesBroken = @{NSForegroundColorAttributeName: [TARGET_PLATFORM_COLOR redColor]}; // Make this attributes[BROKEN]
+//                print_attr_element_list(out, elt->contents.link->label, attributes, merge(current, attributesBroken));
+//                print_attr_string(out, [NSString stringWithFormat: @" (%@)", elt->contents.link->url], current);
+//            }
+            break;
+            
+        case SINGLEQUOTED:
+            print_attr_element_list_img_url(out, elt->children, attributes, current);
+            break;
+        case DOUBLEQUOTED:
+            print_attr_element_list_img_url(out, elt->children, attributes, current);
+            break;
+        case CODE:
+            break;
+        case HTML:
+            break;
+        case EMPH: case STRONG:
+            print_attr_element_list_img_url(out, elt->children, attributes, merge(current, attributes[elt->key]));
+            break;
+        case LIST:
+            print_attr_element_list_img_url(out, elt->children, attributes, merge(current, attributes[elt->key]));
+            break;
+        case RAW:
+            /* Shouldn't occur - these are handled by process_raw_blocks() */
+            assert(elt->key != RAW);
+            break;
+        case H1: case H2: case H3: case H4: case H5: case H6:
+            print_attr_element_list_img_url(out, elt->children, attributes, merge(current, attributes[elt->key]));
+            break;
+        case PLAIN:
+            print_attr_element_list_img_url(out, elt->children, attributes, merge(current, attributes[elt->key]));
+            break;
+        case PARA:
+            //NSLog(@"%@",merge(current, attributes[elt->key]));
+            print_attr_element_list_img_url(out, elt->children, attributes, merge(current, attributes[elt->key]));
+            break;
+        case HRULE:         break;
+        case HTMLBLOCK:     break;
+        case VERBATIM:      break;
+        case BULLETLIST:
+            //pad(out, 2);
+            padded = 0;
+            indentation+=1;
+            print_attr_element_list_img_url(out, elt->children, attributes, merge(current, attributes[elt->key]));
+            //pad(out, 1);
+            indentation-=1;
+            padded = 0;
+            break;
+        case ORDEREDLIST:
+            //pad(out, 2);
+            padded = 0;
+            print_attr_element_list_img_url(out, elt->children, attributes, merge(current, attributes[elt->key]));
+            //pad(out, 1);
+            padded = 0;
+            break;
+        case LISTITEM:
+            //pad(out, 1);
+            padded = 2;
+            print_attr_element_list_img_url(out, elt->children, attributes, merge(current, attributes[elt->key]));
+            padded = 0;
+            break;
+        case BLOCKQUOTE:
+            //pad(out, 2);
+            padded = 2;
+            //NSLog(@"block");
+            print_attr_element_list_img_url(out, elt->children, attributes, merge(current, attributes[elt->key]));
+            //pad(out, 1);
+            padded = 0;
+            break;
+        case REFERENCE:
+            /* Nonprinting */
+            break;
+        case NOTE:
+            /* if contents.str == 0, then print note; else ignore, since this
+             * is a note block that has been incorporated into the notes list */
+            /*if (elt->contents.str == 0) {
+             add_endnote(elt);
+             ++notenumber;
+             [out appendFormat:@"<a class=\"noteref\" id=\"fnref%d\" href=\"#fn%d\" title=\"Jump to note %d\">[%d]</a>",
+             notenumber, notenumber, notenumber, notenumber];
+             }*/
+            break;
+        default:
+            break;
+    }
+}
+
 /**********************************************************************
 
   Parameterized function for printing an Element.
@@ -306,6 +419,19 @@ void print_element_list_attr(NSMutableAttributedString *out, element *elt, int e
     }
 }
 
+void print_element_list_attr_img_url(NSMutableArray *out, element *elt, int exts,NSDictionary *attributes[], NSDictionary *current) {
+    /* Initialize globals */
+    endnotes = nil;
+    notenumber = 0;
+    
+    extensions = exts;
+    padded = 2;  /* set padding to 2, so no extra blank lines at beginning */
+    print_attr_element_list_img_url(out, elt, attributes, current);
+    if (endnotes != nil) {
+        // pad(out, 2);
+        // print_attr_endnotes(out);
+    }
+}
 
 
 /* vim:set ts=4 sw=4: */
